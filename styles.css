@@ -46,7 +46,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: var(--sys-text);
   background-color: var(--sys-bg);
-  background-image: url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+  background-image: url('https://oss.ericzhao3366.work/blog/background.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -592,3 +592,4 @@ body {
   border: 1px solid rgba(255,255,255,0.06);
   box-shadow: 0 8px 30px rgba(0,0,0,0.6);
 }
+
