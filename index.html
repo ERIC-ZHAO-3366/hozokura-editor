@@ -13,7 +13,7 @@
         <div class="header-left">
             <h1>Hozokura Writer</h1>
         </div>
-        <div class="header-actions" style="display:flex; align-items:center; gap:16px;">
+        <div class="header-actions flex-header-actions">
           <label id="theme-toggle-wrapper" class="theme-toggle-label" title="切换明亮/夜间模式">
             <input id="theme-toggle-checkbox" type="checkbox" aria-label="切换主题" />
             <div class="theme-toggle-track"></div>
@@ -52,7 +52,7 @@
                     </div>
                     <div class="form-group">
                         <label>日期 (Date)</label>
-                        <input type="date" id="meta-date">
+                        <input type="date" id="meta-date" title="选择日期" placeholder="请选择日期">
                     </div>
                     <div class="form-group">
                         <label>标签 (Tags) - 逗号分隔</label>
@@ -64,7 +64,7 @@
                     </div>
                     <!-- 发布状态开关已移除：导出默认为已发布 -->
                 </div>
-                <div class="form-group" style="margin-bottom: 0;">
+                <div class="form-group no-margin-bottom">
                     <label>摘要说明 (Description) - 可选</label>
                     <textarea id="meta-desc" placeholder="简短的总结..." rows="1"></textarea>
                 </div>

@@ -111,7 +111,7 @@ function generateFrontmatter() {
   let fm = '---\n';
   if (title) fm += `title: "${title}"\n`;
   if (desc) fm += `description: "${desc}"\n`;
-  if (date) fm += `date: "${date}"\n`;
+  if (date) fm += `date: ${date}\n`;
   fm += `published: ${isPublish}\n`;
   if (tagsArr.length > 0) fm += `tags:\n${tagsArr.map(t => `  - ${t}`).join('\n')}\n`;
   if (catArr.length > 0) fm += `categories:\n${catArr.map(c => `  - ${c}`).join('\n')}\n`;
