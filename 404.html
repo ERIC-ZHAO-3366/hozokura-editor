@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>404 未找到 — 页面不存在</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="description" content="抱歉，您访问的页面不存在。返回主页或使用搜索查找内容。" />
+  <style>
+    :root{--bg1:#0f172a;--bg2:#0b1220;--accent:#ff6b81;--muted:#9aa4b2}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#e6eef6}
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:40px}
+    .card{width:100%;max-width:1100px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.12));border-radius:18px;box-shadow:0 10px 30px rgba(2,6,23,0.7);overflow:hidden;display:flex;gap:24px}
+    .art{flex:1 1 420px;min-height:320px;background:radial-gradient(ellipse at 30% 20%, rgba(255,107,129,0.06), transparent 20%), linear-gradient(180deg, rgba(255,255,255,0.02), transparent);display:flex;align-items:center;justify-content:center;padding:28px}
+    .art img{width:92%;max-width:480px;filter:drop-shadow(0 20px 40px rgba(0,0,0,0.6));transform-origin:center;animation:float 6s ease-in-out infinite}
+    @keyframes float{0%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-12px) rotate(1deg)}100%{transform:translateY(0) rotate(-1deg)}}
+    .body{flex:1 1 380px;padding:42px 36px;display:flex;flex-direction:column;justify-content:center}
+    .code{font-size:96px;font-weight:800;letter-spacing:4px;color:var(--accent);margin:0}
+    .title{font-size:20px;margin-top:6px;color:#f8fbff}
+    .desc{color:var(--muted);margin-top:14px;line-height:1.6}
+    .actions{margin-top:22px;display:flex;gap:12px;align-items:center}
+    .btn{background:linear-gradient(90deg,var(--accent),#ff9db1);border:none;color:#081226;padding:12px 18px;border-radius:12px;font-weight:600;cursor:pointer;text-decoration:none}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#d7e6f9}
+    .hint{margin-top:18px;color:#9fb0c9;font-size:13px}
+    footer{margin-top:8px;font-size:12px;color:#6f86a0}
+    @media (max-width:880px){.card{flex-direction:column}.art img{width:78%}.code{font-size:72px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card" role="main" aria-labelledby="page-title">
+      <div class="art" aria-hidden="true">
+        <img src="https://oss.ericzhao3366.work/blog/question.png" alt="迷惑的二次元角色" />
+      </div>
+      <div class="body">
+        <h1 id="page-title" class="code">404</h1>
+        <div class="title">啊哦 — 页面不见了</div>
+        <p class="desc">您访问的页面不存在或已被移除。可以返回首页继续浏览，或检查 URL 后重试。</p>
+        <div class="actions">
+          <a class="btn" href="/">返回首页</a>
+          <a class="btn ghost" href="javascript:history.back()">返回上页</a>
+        </div>
+        <footer>如果您认为这是错误，请联系站点管理员。</footer>
+      </div>
+    </section>
+  </main>
+  <script>
+    // 取代默认浏览器 404 标识（仅 UX，不影响服务器返回码）
+    if (location.pathname === '/' || location.pathname === '/index.html') {
+      // 页面在根时保留正常首页行为
+    }
+  </script>
+</body>
+</html>
