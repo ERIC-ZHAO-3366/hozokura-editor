@@ -14,6 +14,7 @@ const metaDesc = document.getElementById('meta-desc');
 const metaDate = document.getElementById('meta-date');
 const metaTags = document.getElementById('meta-tags');
 const metaCategories = document.getElementById('meta-categories');
+const metaPinned = document.getElementById('meta-pinned-checkbox');
 
 // Top Panel Toggle Elements
 const toggleBtn = document.getElementById('toggle-meta-btn');
@@ -105,12 +106,14 @@ function generateFrontmatter() {
   const date = (metaDate && metaDate.value) ? metaDate.value : '';
   const tagsArr = (metaTags && metaTags.value) ? metaTags.value.split(',').map(t => t.trim()).filter(Boolean) : [];
   const catArr = (metaCategories && metaCategories.value) ? metaCategories.value.split(',').map(c => c.trim()).filter(Boolean) : [];
+  const isPinned = (metaPinned && metaPinned.checked) ? true : false;
   // Exports default to published
   const isPublish = true;
 
   let fm = '---\n';
   if (title) fm += `title: "${title}"\n`;
   if (desc) fm += `description: "${desc}"\n`;
+  if (isPinned) fm += `pinned: true\n`;
   if (date) fm += `date: ${date}\n`;
   fm += `published: ${isPublish}\n`;
   if (tagsArr.length > 0) fm += `tags:\n${tagsArr.map(t => `  - ${t}`).join('\n')}\n`;
@@ -242,6 +245,7 @@ if (editor) {
 
 if (metaTitle) metaTitle.addEventListener('input', updatePreview);
 if (metaDesc) metaDesc.addEventListener('input', updatePreview);
+if (metaPinned) metaPinned.addEventListener('change', updatePreview);
 
 // Download logic
 if (downloadBtn) {

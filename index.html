@@ -41,7 +41,7 @@
                 <svg id="meta-toggle-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="toggle-icon"><path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd" /></svg>
             </div>
             <div class="meta-content" id="meta-content">
-                <div class="meta-grid">
+                <div class="meta-top-row">
                     <div class="form-group">
                         <label>标题 (Title)</label>
                         <input type="text" id="meta-title" placeholder="惊人的旅程..." value="欢迎你的到来 / Welcome">
@@ -55,14 +55,23 @@
                         <input type="date" id="meta-date" title="选择日期" placeholder="请选择日期">
                     </div>
                     <div class="form-group">
+                        <label>分类 (Categories) - 逗号分隔</label>
+                        <input type="text" id="meta-categories" placeholder="Lifestyle, Tech">
+                    </div>
+                    <div class="form-group">
                         <label>标签 (Tags) - 逗号分隔</label>
                         <input type="text" id="meta-tags" placeholder="Astro, Test">
                     </div>
                     <div class="form-group">
-                        <label>分类 (Categories) - 逗号分隔</label>
-                        <input type="text" id="meta-categories" placeholder="Lifestyle, Tech">
+                      <label>置顶 (Pinned)</label>
+                      <div class="toggle-group">
+                        <label class="toggle-switch" title="置顶到文章顶部">
+                          <input id="meta-pinned-checkbox" type="checkbox" aria-label="置顶" />
+                          <span class="track" aria-hidden="true"></span>
+                          <span class="knob" aria-hidden="true"></span>
+                        </label>
+                      </div>
                     </div>
-                    <!-- 发布状态开关已移除：导出默认为已发布 -->
                 </div>
                 <div class="form-group no-margin-bottom">
                     <label>摘要说明 (Description) - 可选</label>
