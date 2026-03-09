@@ -70,19 +70,55 @@ function applyTheme(theme) {
 function initTheme() {
   const themeToggle = document.getElementById('theme-toggle-checkbox');
   const stored = localStorage.getItem('hozokura-theme');
+  let systemListenerRemover = null;
+
+  const applySystemPreference = () => {
+    if (window.matchMedia) {
+      const mql = window.matchMedia('(prefers-color-scheme: dark)');
+      applyTheme(mql.matches ? 'dark' : 'light');
+
+      const onChange = (e) => {
+        if (!localStorage.getItem('hozokura-theme')) {
+          applyTheme(e.matches ? 'dark' : 'light');
+        }
+      };
+
+      if (mql.addEventListener) mql.addEventListener('change', onChange);
+      else if (mql.addListener) mql.addListener(onChange);
+
+      systemListenerRemover = () => {
+        if (mql.removeEventListener) mql.removeEventListener('change', onChange);
+        else if (mql.removeListener) mql.removeListener(onChange);
+      };
+    } else {
+      // fallback to time-based auto: night between 19:00 and 06:00
+      const hour = new Date().getHours();
+      const isNight = (hour >= 19 || hour < 6);
+      applyTheme(isNight ? 'dark' : 'light');
+    }
+  };
+
   if (stored === 'dark' || stored === 'light') {
     applyTheme(stored);
   } else {
-    // default to system preference
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyTheme(prefersDark ? 'dark' : 'light');
+    applySystemPreference();
   }
+
   if (themeToggle) {
     themeToggle.addEventListener('change', (e) => {
       const isDark = e.target.checked;
       const next = isDark ? 'dark' : 'light';
       applyTheme(next);
       localStorage.setItem('hozokura-theme', next);
+      if (systemListenerRemover) systemListenerRemover();
+    });
+
+    // Shift + Click on the toggle clears stored preference and returns to auto mode
+    themeToggle.addEventListener('click', (e) => {
+      if (e.shiftKey) {
+        localStorage.removeItem('hozokura-theme');
+        applySystemPreference();
+      }
     });
   }
 }
