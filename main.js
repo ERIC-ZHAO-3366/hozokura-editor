@@ -55,6 +55,103 @@ if (metaDate && metaDate.valueAsDate === null) metaDate.valueAsDate = new Date()
 // Setup marked options
 marked.setOptions({ gfm: true, breaks: true });
 
+function parseShortcodeAttributes(attributeString = '') {
+  const attributes = {};
+  // Handle both standard quotes and html encoded strings
+  attributeString.replace(/([a-zA-Z0-9_-]+)\s*=\s*(?:"|&quot;|')([^"']*?)(?:"|&quot;|')/g, (_, key, value) => {
+    attributes[key.toLowerCase()] = unescapeHtml(value);
+    return '';
+  });
+  return attributes;
+}
+
+function getYouTubeEmbedUrl(url) {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+  return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=0&rel=0&modestbranding=1` : '';
+}
+
+function getBilibiliEmbedUrl(url) {
+  const bvidMatch = url.match(/bilibili\.com\/video\/(BV[a-zA-Z0-9]+)/i);
+  if (bvidMatch) return `https://player.bilibili.com/player.html?bvid=${bvidMatch[1]}&page=1&high_quality=1&as_wide=1&autoplay=0`;
+
+  const aidMatch = url.match(/bilibili\.com\/video\/av(\d+)/i);
+  if (aidMatch) return `https://player.bilibili.com/player.html?aid=${aidMatch[1]}&page=1&high_quality=1&as_wide=1&autoplay=0`;
+
+  const bvidInQuery = url.match(/[?&]bvid=(BV[a-zA-Z0-9]+)/i);
+  if (bvidInQuery) return `https://player.bilibili.com/player.html?bvid=${bvidInQuery[1]}&page=1&high_quality=1&as_wide=1&autoplay=0`;
+
+  return '';
+}
+
+function getSpotifyEmbedUrl(url) {
+  const match = url.match(/open\.spotify\.com\/(track|album|playlist)\/([a-zA-Z0-9]+)/i);
+  return match ? `https://open.spotify.com/embed/${match[1]}/${match[2]}` : '';
+}
+
+function getNeteaseEmbedUrl(url) {
+  const trackMatch = url.match(/[?&]id=(\d+)/i);
+  if (trackMatch) return `https://music.163.com/outchain/player?type=2&id=${trackMatch[1]}&auto=0&height=66`;
+
+  const playlistMatch = url.match(/[?&]playlistId=(\d+)/i);
+  if (playlistMatch) return `https://music.163.com/outchain/player?type=0&id=${playlistMatch[1]}&auto=0&height=380`;
+
+  return '';
+}
+
+function buildMusicEmbedHtml(url, title = '') {
+  const embedUrl = getNeteaseEmbedUrl(url) || getSpotifyEmbedUrl(url);
+  if (!embedUrl) {
+    return `<a class="media-fallback-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(title || url)}</a>`;
+  }
+
+  const isSpotify = embedUrl.includes('open.spotify.com/embed');
+  const platform = isSpotify ? 'Spotify' : '网易云音乐';
+  const provider = isSpotify ? 'spotify' : 'netease';
+  const displayTitle = title ? escapeHtml(title) : platform;
+  
+  return `
+    <figure class="media-embed media-embed-music media-embed-${provider}">
+      <figcaption class="media-embed-header">
+        <div class="media-embed-meta">
+          <span class="media-embed-platform">${platform}</span>
+          ${title ? `<strong class="media-embed-title">${escapeHtml(title)}</strong>` : ''}
+        </div>
+        <a class="media-embed-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">源链接</a>
+      </figcaption>
+      <div class="media-embed-body">
+        <iframe src="${escapeHtml(embedUrl)}" title="${displayTitle}" loading="lazy" frameborder="0" allow="clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+      </div>
+    </figure>
+  `;
+}
+
+function buildVideoEmbedHtml(url, title = '') {
+  const embedUrl = getBilibiliEmbedUrl(url) || getYouTubeEmbedUrl(url);
+  if (!embedUrl) {
+    return `<a class="media-fallback-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(title || url)}</a>`;
+  }
+
+  const isYouTube = embedUrl.includes('youtube.com/embed');
+  const platform = isYouTube ? 'YouTube' : 'Bilibili';
+  const provider = isYouTube ? 'youtube' : 'bilibili';
+  const displayTitle = title ? escapeHtml(title) : platform;
+  
+  return `
+    <figure class="media-embed media-embed-video media-embed-${provider}">
+      <figcaption class="media-embed-header">
+        <div class="media-embed-meta">
+          <span class="media-embed-platform">${platform}</span>
+          ${title ? `<strong class="media-embed-title">${escapeHtml(title)}</strong>` : ''}
+        </div>
+        <a class="media-embed-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">源链接</a>
+      </figcaption>
+      <div class="media-embed-body">
+        <iframe src="${escapeHtml(embedUrl)}" title="${displayTitle}" loading="lazy" frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div>
+    </figure>
+  `;
+}
+
 // THEME: support toggling light/dark and persist preference
 function applyTheme(theme) {
   if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
@@ -130,7 +227,15 @@ function parseCustomShortcodes(html) {
     { regex: /\[warn\]([\s\S]*?)\[\/warn\]/g, replacement: '<div class="shortcode-block shortcode-warn"><span class="shortcode-icon">⚠️</span><div class="shortcode-content">$1</div></div>' },
     { regex: /\[wrong\]([\s\S]*?)\[\/wrong\]/g, replacement: '<div class="shortcode-block shortcode-wrong"><span class="shortcode-icon">❌</span><div class="shortcode-content">$1</div></div>' },
     { regex: /\[right\]([\s\S]*?)\[\/right\]/g, replacement: '<div class="shortcode-block shortcode-right"><span class="shortcode-icon">✅</span><div class="shortcode-content">$1</div></div>' },
-    { regex: /\[hide\]([\s\S]*?)\[\/hide\]/g, replacement: '<span class="shortcode-hide" title="悬停显示">$1</span>' }
+    { regex: /\[hide\]([\s\S]*?)\[\/hide\]/g, replacement: '<span class="shortcode-hide" title="悬停显示">$1</span>' },
+    { regex: /\[music(?:\s+([^\]]+))?\]([\s\S]*?)\[\/music\]/g, replacement: (_, attrString, url) => {
+      const attrs = parseShortcodeAttributes(attrString || '');
+      return buildMusicEmbedHtml(url.trim(), attrs.title || '');
+    } },
+    { regex: /\[video(?:\s+([^\]]+))?\]([\s\S]*?)\[\/video\]/g, replacement: (_, attrString, url) => {
+      const attrs = parseShortcodeAttributes(attrString || '');
+      return buildVideoEmbedHtml(url.trim(), attrs.title || '');
+    } }
   ];
 
   return shortcodes.reduce((acc, { regex, replacement }) => acc.replace(regex, replacement), html);
@@ -176,6 +281,14 @@ function updatePreview() {
 
 function escapeHtml(s) {
   return s.replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function unescapeHtml(s) {
+  return s.replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'");
 }
 
 // Toolbar actions (initialized after DOM ready)
@@ -239,12 +352,14 @@ function insertMarkdownAtCursor(action) {
     'sc-warn': { before: '\n[warn]\n', after: '\n[/warn]\n' },
     'sc-wrong': { before: '\n[wrong]\n', after: '\n[/wrong]\n' },
     'sc-right': { before: '\n[right]\n', after: '\n[/right]\n' },
-    'sc-hide': { before: '[hide]', after: '[/hide]' }
+    'sc-hide': { before: '[hide]', after: '[/hide]' },
+    'sc-video': { before: '\n[video title="我的视频"]', after: '[/video]\n', placeholder: 'https://www.bilibili.com/video/BV1xx411c7mD' },
+    'sc-music': { before: '\n[music title="夜间循环播放"]', after: '[/music]\n', placeholder: 'https://music.163.com/#/song?id=29764561' }
   };
 
   if (actions[action]) {
     const a = actions[action];
-    const placeholder = (action.startsWith('sc-') || action === 'code') ? '内容' : 'text';
+    const placeholder = a.placeholder || ((action.startsWith('sc-') || action === 'code') ? '内容' : 'text');
     const insertedContent = selectedText || placeholder;
     const newText = a.before + insertedContent + a.after;
 
@@ -322,6 +437,6 @@ if (metaTitle && metaFilename) {
 
 // Initial Render
 if (editor) {
-  editor.value = `欢迎使用 Hozokura 编辑器 — 支持 Frontmatter 可视化、短代码和实时预览。\n\n---\n\n示例短代码：\n\n[warn]这是一个警告提示[/warn]\n\n[right]这是成功提示[/right]\n\n[wrong]这是错误提示[/wrong]\n\n[hide]这段文本默认隐藏，悬停可见[/hide]\n`;
+  editor.value = `欢迎使用 Hozokura 编辑器 — 支持 Frontmatter 可视化、短代码和实时预览。\n\n---\n\n示例短代码：\n\n[warn]这是一个警告提示[/warn]\n\n[right]这是成功提示[/right]\n\n[wrong]这是错误提示[/wrong]\n\n[hide]这段文本默认隐藏，悬停可见[/hide]\n\n[video title="我的视频"]https://www.bilibili.com/video/BV1xx411c7mD[/video]\n\n[music title="夜间循环播放"]https://music.163.com/#/song?id=29764561[/music]\n`;
   updatePreview();
 }
