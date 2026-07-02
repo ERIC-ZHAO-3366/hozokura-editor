@@ -1,17 +1,24 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hozokura 编辑器</title>
     <link rel="stylesheet" href="./styles.css" />
+    <link href="https://fonts.shinji.ren/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   </head>
   <body>
     <div class="app-bg"></div>
     <div class="app-container">
       <header class="glass-header">
         <div class="header-left">
-            <h1>Hozokura Writer</h1>
+          <div class="app-logo">H</div>
+          <h1>Hozokura Writer</h1>
+          <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="writer">写作</button>
+            <button class="mode-tab" data-mode="wechat">微信保存</button>
+          </div>
         </div>
         <div class="header-actions flex-header-actions">
           <label id="theme-toggle-wrapper" class="theme-toggle-label" title="切换明亮/夜间模式">
@@ -26,100 +33,145 @@
               </svg>
             </div>
           </label>
-          <button id="btn-download" class="btn-primary">
+          <button id="btn-download" class="btn-primary btn-writer-mode">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v6.868l2.47-2.47a.75.75 0 111.06 1.06l-3.75 3.75a.75.75 0 01-1.06 0l-3.75-3.75a.75.75 0 111.06-1.06l2.47 2.47V3.75A.75.75 0 0110 3z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M4 14a.75.75 0 01.75.75v1.5a1.5 1.5 0 001.5 1.5h7.5a1.5 1.5 0 001.5-1.5v-1.5a.75.75 0 011.5 0v1.5a3 3 0 01-3 3h-7.5a3 3 0 01-3-3v-1.5A.75.75 0 014 14z" clip-rule="evenodd" /></svg>
             导出 .md
           </button>
+          <button id="btn-export" class="btn-primary btn-wechat-mode" style="display:none;" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" /><path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" /></svg>
+              导出 ZIP
+            </button>
         </div>
       </header>
 
       <main class="main-layout flex-col">
-        <!-- Settings / Setup Pane (Top) -->
-        <section class="glass-pane pane-meta-container" id="meta-container">
-            <div class="meta-header" id="toggle-meta-btn">
-                <h2>文章元数据设置</h2>
-                <svg id="meta-toggle-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="toggle-icon"><path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd" /></svg>
-            </div>
-            <div class="meta-content" id="meta-content">
-                <div class="meta-top-row">
-                    <div class="form-group">
-                        <label>标题 (Title)</label>
-                        <input type="text" id="meta-title" placeholder="惊人的旅程..." value="欢迎你的到来 / Welcome">
-                    </div>
-                    <div class="form-group">
-                      <label>导出文件名 (Filename) - 可选</label>
-                      <input type="text" id="meta-filename" placeholder="welcome-to-hozokura">
-                    </div>
-                    <div class="form-group">
-                        <label>日期 (Date)</label>
-                        <input type="date" id="meta-date" title="选择日期" placeholder="请选择日期">
-                    </div>
-                    <div class="form-group">
-                        <label>分类 (Categories) - 逗号分隔</label>
-                        <input type="text" id="meta-categories" placeholder="Lifestyle, Tech">
-                    </div>
-                    <div class="form-group">
-                        <label>标签 (Tags) - 逗号分隔</label>
-                        <input type="text" id="meta-tags" placeholder="Astro, Test">
-                    </div>
-                    <div class="form-group">
-                      <label>置顶 (Pinned)</label>
-                      <div class="toggle-group">
-                        <label class="toggle-switch" title="置顶到文章顶部">
-                          <input id="meta-pinned-checkbox" type="checkbox" aria-label="置顶" />
-                          <span class="track" aria-hidden="true"></span>
-                          <span class="knob" aria-hidden="true"></span>
-                        </label>
-                      </div>
-                    </div>
+        <!-- Writer Mode: Meta Settings -->
+        <section class="glass-pane pane-meta-container btn-writer-mode" id="meta-container">
+          <div class="meta-header" id="toggle-meta-btn">
+            <h2>文章元数据设置</h2>
+            <svg id="meta-toggle-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="toggle-icon"><path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd" /></svg>
+          </div>
+          <div class="meta-content" id="meta-content">
+            <div class="meta-top-row">
+              <div class="form-group">
+                <label>标题 (Title)</label>
+                <input type="text" id="meta-title" placeholder="惊人的旅程..." value="欢迎你的到来 / Welcome">
+              </div>
+              <div class="form-group">
+                <label>导出文件名 (Filename) - 可选</label>
+                <input type="text" id="meta-filename" placeholder="welcome-to-hozokura">
+              </div>
+              <div class="form-group">
+                <label>日期 (Date)</label>
+                <input type="date" id="meta-date" title="选择日期" placeholder="请选择日期">
+              </div>
+              <div class="form-group">
+                <label>分类 (Categories) - 逗号分隔</label>
+                <input type="text" id="meta-categories" placeholder="Lifestyle, Tech">
+              </div>
+              <div class="form-group">
+                <label>标签 (Tags) - 逗号分隔</label>
+                <input type="text" id="meta-tags" placeholder="Astro, Test">
+              </div>
+              <div class="form-group">
+                <label>置顶 (Pinned)</label>
+                <div class="toggle-group">
+                  <label class="toggle-switch" title="置顶到文章顶部">
+                    <input id="meta-pinned-checkbox" type="checkbox" aria-label="置顶" />
+                    <span class="track" aria-hidden="true"></span>
+                    <span class="knob" aria-hidden="true"></span>
+                  </label>
                 </div>
-                <div class="form-group no-margin-bottom">
-                    <label>摘要说明 (Description) - 可选</label>
-                    <textarea id="meta-desc" placeholder="简短的总结..." rows="1"></textarea>
-                </div>
+              </div>
             </div>
+            <div class="form-group no-margin-bottom">
+              <label>摘要说明 (Description) - 可选</label>
+              <textarea id="meta-desc" placeholder="简短的总结..." rows="1"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- WeChat Mode: Fetch Pane -->
+        <section class="glass-pane pane-meta-container btn-wechat-mode" id="fetch-pane" style="display:none;">
+          <div class="pane-header" id="toggle-fetch-btn">
+            <h2>微信文章获取</h2>
+            <svg id="fetch-toggle-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="toggle-icon"><path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd" /></svg>
+          </div>
+          <div class="pane-content" id="fetch-content">
+            <div class="url-input-row">
+              <input type="text" id="article-url" placeholder="粘贴微信公众号文章链接，如 https://mp.weixin.qq.com/s/..." />
+              <button id="btn-fetch" class="btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
+                获取文章
+              </button>
+            </div>
+            <div class="progress-bar" id="fetch-progress">
+              <div class="progress-bar-fill" id="fetch-progress-fill"></div>
+            </div>
+            <div class="article-meta-bar" id="article-meta" style="display:none;">
+              <span id="wc-meta-title"></span>
+              <span id="wc-meta-author"></span>
+              <span id="wc-meta-account"></span>
+            </div>
+            <div id="fetch-status" style="margin-top:8px;"></div>
+          </div>
         </section>
 
         <!-- Editor & Preview Pane (Bottom) -->
         <div class="bottom-panes flex-row">
-            <!-- Editor Pane -->
-            <section class="glass-pane pane-editor">
-               <div class="ios-toolbar">
-                  <div class="toolbar-group">
-                      <button class="tb-btn" data-action="bold" title="加粗 (Ctrl+B)"><b>B</b></button>
-                      <button class="tb-btn" data-action="italic" title="斜体 (Ctrl+I)"><i>I</i></button>
-                      <button class="tb-btn" data-action="strikethrough" title="删除线"><s>S</s></button>
-                  </div>
-                  <div class="toolbar-divider"></div>
-                  <div class="toolbar-group">
-                      <button class="tb-btn" data-action="h2" title="标题 2">H2</button>
-                      <button class="tb-btn" data-action="h3" title="标题 3">H3</button>
-                      <button class="tb-btn" data-action="quote" title="引用">”</button>
-                      <button class="tb-btn" data-action="code" title="代码块">&lt;/&gt;</button>
-                  </div>
-                  <div class="toolbar-divider"></div>
-                  <div class="toolbar-group">
-                      <button class="tb-btn" data-action="link" title="链接">🔗</button>
-                      <button class="tb-btn" data-action="image" title="图片">🖼️</button>
-                      <button class="tb-btn" data-action="table" title="表格">▦</button>
-                  </div>
-                  <div class="toolbar-divider flex-grow"></div>
-                  <div class="toolbar-group">
-                      <button class="tb-btn sc-btn text-yellow-400" data-action="sc-warn" title="警告短代码 (Ctrl+Shift+W)">⚠</button>
-                      <button class="tb-btn sc-btn text-red-400" data-action="sc-wrong" title="错误短代码 (Ctrl+Shift+E)">✕</button>
-                      <button class="tb-btn sc-btn text-green-400" data-action="sc-right" title="正确短代码 (Ctrl+Shift+R)">✓</button>
-                      <button class="tb-btn sc-btn text-gray-400" data-action="sc-hide" title="隐藏文字 (Ctrl+Shift+H)">🕶</button>
-                     <button class="tb-btn sc-btn text-blue-400" data-action="sc-video" title="视频短代码">🎬</button>
-                     <button class="tb-btn sc-btn text-pink-400" data-action="sc-music" title="音乐短代码">♫</button>
-                  </div>
-               </div>
-                <textarea id="editor" spellcheck="false" placeholder="在此开始编写你的文章... 支持 [video] 和 [music] 短代码。"></textarea>
-            </section>
+          <!-- Left Pane -->
+          <section class="glass-pane pane-editor">
+            <!-- WeChat mode: Markdown preview header -->
+            <div class="wechat-preview-header btn-wechat-mode" style="display:none;">
+              <h2>Markdown 预览</h2>
+              <button id="btn-edit-in-writer" class="btn-primary btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" /></svg>
+                编辑
+              </button>
+            </div>
 
-            <!-- Preview Pane -->
-            <section class="glass-pane pane-preview">
-               <article id="preview" class="preview-content"></article>
-            </section>
+            <!-- Writer mode: toolbar + editor -->
+            <div id="markdown-edit-wrapper" class="btn-writer-mode">
+              <div class="ios-toolbar">
+                <div class="toolbar-group">
+                  <button class="tb-btn" data-action="bold" title="加粗 (Ctrl+B)"><b>B</b></button>
+                  <button class="tb-btn" data-action="italic" title="斜体 (Ctrl+I)"><i>I</i></button>
+                  <button class="tb-btn" data-action="strikethrough" title="删除线"><s>S</s></button>
+                </div>
+                <div class="toolbar-divider"></div>
+                <div class="toolbar-group">
+                  <button class="tb-btn" data-action="h2" title="标题 2">H2</button>
+                  <button class="tb-btn" data-action="h3" title="标题 3">H3</button>
+                  <button class="tb-btn" data-action="quote" title="引用">"</button>
+                  <button class="tb-btn" data-action="code" title="代码块">&lt;/&gt;</button>
+                </div>
+                <div class="toolbar-divider"></div>
+                <div class="toolbar-group">
+                  <button class="tb-btn" data-action="link" title="链接">🔗</button>
+                  <button class="tb-btn" data-action="image" title="图片">🖼️</button>
+                  <button class="tb-btn" data-action="table" title="表格">▦</button>
+                </div>
+                <div class="toolbar-divider flex-grow"></div>
+                <div class="toolbar-group">
+                  <button class="tb-btn sc-btn text-yellow-400" data-action="sc-warn" title="警告短代码 (Ctrl+Shift+W)">⚠</button>
+                  <button class="tb-btn sc-btn text-red-400" data-action="sc-wrong" title="错误短代码 (Ctrl+Shift+E)">✕</button>
+                  <button class="tb-btn sc-btn text-green-400" data-action="sc-right" title="正确短代码 (Ctrl+Shift+R)">✓</button>
+                  <button class="tb-btn sc-btn text-gray-400" data-action="sc-hide" title="隐藏文字 (Ctrl+Shift+H)">🕶</button>
+                  <button class="tb-btn sc-btn text-blue-400" data-action="sc-video" title="视频短代码">🎬</button>
+                  <button class="tb-btn sc-btn text-pink-400" data-action="sc-music" title="音乐短代码">♫</button>
+                </div>
+              </div>
+              <textarea id="editor" spellcheck="false" placeholder="在此开始编写你的文章... 支持 [video] 和 [music] 短代码。"></textarea>
+            </div>
+
+            <!-- WeChat mode: read-only preview -->
+            <article id="wechat-md-preview" class="preview-content btn-wechat-mode" style="display:none;"></article>
+          </section>
+
+          <!-- Right Preview Pane -->
+          <section class="glass-pane pane-preview">
+            <article id="preview" class="preview-content"></article>
+          </section>
         </div>
       </main>
 
@@ -135,6 +187,12 @@
         </div>
       </footer>
     </div>
+
+    <div class="lightbox-overlay" id="lightbox">
+      <button class="lightbox-close" id="lightbox-close">&times;</button>
+      <img id="lightbox-img" src="" alt="大图预览" />
+    </div>
+
     <script type="module" src="./main.js"></script>
   </body>
 </html>
