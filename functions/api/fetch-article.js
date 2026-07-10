@@ -1,3 +1,18 @@
+const ALLOWED_ORIGINS = [
+  'https://editor.ericzhao3366.work',
+  'http://localhost:8788',
+  'http://127.0.0.1:8788',
+];
+
+function checkOrigin(request) {
+  const origin = request.headers.get('Origin') || '';
+  if (!origin) return null;
+  if (ALLOWED_ORIGINS.some(allowed => origin === allowed || origin.startsWith(allowed + '/'))) {
+    return origin;
+  }
+  return false;
+}
+
 function arrayBufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
   let binary = '';
@@ -34,12 +49,21 @@ function getImageExtension(url, contentType) {
 
 export async function onRequestPost(context) {
   try {
+    const allowedOrigin = checkOrigin(context.request);
+    if (allowedOrigin === false) {
+      return new Response(JSON.stringify({ error: '域名未授权' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowedOrigin || '' },
+      });
+    }
+    const corsOrigin = allowedOrigin || '';
+
     const { url } = await context.request.json();
 
     if (!url || !url.includes('mp.weixin.qq.com')) {
       return new Response(JSON.stringify({ error: '请提供有效的微信公众号文章链接' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': corsOrigin },
       });
     }
 
@@ -54,11 +78,19 @@ export async function onRequestPost(context) {
     if (!resp.ok) {
       return new Response(JSON.stringify({ error: `请求失败: HTTP ${resp.status}` }), {
         status: resp.status,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': corsOrigin },
       });
     }
 
     const html = await resp.text();
+
+    if (!html.includes('js_content') && !html.includes('rich_media_content')) {
+      return new Response(JSON.stringify({ error: '获取到的页面不是有效的微信公众号文章，可能需要验证或链接已失效' }), {
+        status: 422,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': corsOrigin },
+      });
+    }
+
     const imageUrls = extractImageUrls(html);
 
     const images = {};
@@ -90,20 +122,22 @@ export async function onRequestPost(context) {
     }
 
     return new Response(JSON.stringify({ html, images, imageCount: Object.keys(images).length }), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': corsOrigin },
     });
   } catch (e) {
     return new Response(JSON.stringify({ error: `服务器错误: ${e.message}` }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': corsOrigin },
     });
   }
 }
 
-export async function onRequestOptions() {
+export async function onRequestOptions(context) {
+  const allowedOrigin = checkOrigin(context.request);
+  const corsOrigin = allowedOrigin || '';
   return new Response(null, {
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': corsOrigin,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },

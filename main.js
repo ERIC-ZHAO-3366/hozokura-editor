@@ -625,7 +625,14 @@ async function fetchArticle() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
     });
-    const data = await resp.json();
+    const text = await resp.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      const preview = text.substring(0, 200);
+      throw new Error(`服务端返回了非JSON响应 (HTTP ${resp.status}): ${preview}`);
+    }
     if (data.error) { setStatus(data.error, 'error'); return; }
 
     setProgress(60);
